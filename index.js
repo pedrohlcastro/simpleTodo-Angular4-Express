@@ -5,7 +5,16 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const app = express();
+
+const itemSchema = new mongoose.Schema({
+	text: {
+		type: String,
+		reqired: true
+	}
+});
+const Item = mongoose.model('Item', itemSchema);
 
 app.use(morgan('dev'));
 app.use(cors());

@@ -7,7 +7,7 @@ import { TodoService } from '../shared/todo.service'
 })
 export class TodoComponent implements OnInit {
   
-  todoItens:string[];
+  todoItens = [];
 
   constructor(private todoService:TodoService) { }
 
@@ -22,7 +22,8 @@ export class TodoComponent implements OnInit {
   }
 
   deleteItem(id){
-    this.todoService.deleteItem(id)
+    const item = this.todoItens[id];
+    this.todoService.deleteItem(item._id)
       .subscribe(res => this.getAllData());
   }
 

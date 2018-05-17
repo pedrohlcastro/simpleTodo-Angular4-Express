@@ -16,7 +16,7 @@ export class TodoService {
   }
 
   createItem(newItem:string){
-    return this._http.post(this.URL + '/' + newItem, {} ).map(res => res.json());
+    return this._http.post(this.URL, {text: newItem} ).map(res => res.json());
   }
 
 }

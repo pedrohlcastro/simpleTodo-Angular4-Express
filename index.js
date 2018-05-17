@@ -8,13 +8,23 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
 
-const itemSchema = new mongoose.Schema({
-	text: {
-		type: String,
-		reqired: true
-	}
-});
-const Item = mongoose.model('Item', itemSchema);
+const dbPort = 27017;
+const dbName = 'todo-kube';
+let itemSchema, Item;
+
+mongoose.connect(`mongodb://localhost:${dbPort}/${dbName}`)
+    .then(() => {
+        console.log('[SERVER] MongoDb connected');
+        itemSchema = new mongoose.Schema({
+            text: {
+                type: String,
+                reqired: true
+            }
+        });
+        Item = mongoose.model('Item', itemSchema);
+    }, (err) => {
+        console.error('\x1b[31m', '[SERVER] MongoDb failed to connect')
+    });
 
 app.use(morgan('dev'));
 app.use(cors());
@@ -25,30 +35,24 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Point static path to dist
 app.use(express.static(path.join(__dirname,'dist')));
 
-let todoItens = [];
-
 app.get('/test', (req, res) => {
-    res.json(todoItens);
+    Item.find({}).exec()
+        .then((data) => res.json(data))
+        .catch((err) => res.status(500).json({status: 'Error DB query: ' + err }));
 });
 
-app.post('/test/:todo', (req, res) => {
-    todoItens.unshift(req.params.todo);
-    res.json({
-        status: 'Sucesso'
-    });
+app.post('/test', (req, res) => {
+    const text = req.body.text;
+    const newItem = new Item({text: text});
+    newItem.save()
+        .then(() => res.json({result: 'Success'}))
+        .catch((err) => res.status(500).json({status: 'Error DB query: ' + err}));
 });
 
 app.delete('/test/:id', (req,res) =>{
-    let removeId = parseInt(req.params.id);
-    if(todoItens.length > removeId){
-        todoItens.splice(removeId,1);
-        res.json({
-            status: 'Arquivo removido com sucesso'
-        });
-    }
-    res.json({
-        status: 'Não foi possivel remover item'
-    });
+    Item.findByIdAndRemove(req.params.id).exec()
+        .then((data) => res.json({status: 'Success'}))
+        .catch((err => res.status(500).json({status: 'Error DB query: ' + err })));
 });
 
 app.get('*', (req,res) => {
